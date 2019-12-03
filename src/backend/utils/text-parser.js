@@ -1,20 +1,17 @@
-const puppeteer = require('puppeteer');
+const striptags = require('striptags');
+const jsdom = require('jsdom');
+
+const { JSDOM } = jsdom;
 
 module.exports = async function(htmlFragment) {
-  let browser;
-  try {
-    browser = await puppeteer.launch();
-    const page = await browser.newPage();
+  const dom = new JSDOM(htmlFragment);
+  const body = dom.window.document.querySelector('body');
 
-    await page.setContent(htmlFragment, {
-      waitUntil: 'domcontentloaded',
-    });
-
-    const result = await page.evaluate('document.body.innerText');
-    return result;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
-  }
+  /* 
+  The substitution string can be anything as long as
+  it's infrequent and won't appear in blogs.
+  */
+  return striptags(body.innerHTML, [], '\r')
+    .trim()
+    .replace(/\r+/g, '\n');
 };
